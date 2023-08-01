@@ -4,22 +4,48 @@
 // Feel free to delete this line.
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
-pub mod player;
+pub mod collisions;
+pub mod game_over;
+pub mod inputs;
 pub mod mob;
+pub mod player;
+pub mod target;
 
 use bevy::prelude::*;
 use bevy_turborand::prelude::*;
+use target::Target;
+
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+pub enum AppState {
+    MainMenu,
+    #[default]
+    InGame,
+    GameOverMenu,
+}
 
 const FIXED_TIMESTEP: f32 = 0.5;
 fn main() {
     App::new()
+        .init_resource::<Target>()
         .add_plugins(DefaultPlugins)
         .add_plugins(RngPlugin::default())
-        .add_systems(Startup, setup)
-        .add_systems(Startup, player::setup)
-        .add_systems(Startup, mob::spawn)
-        .add_systems(Update, mob::update_pos)
-//        .insert_resource(FixedTime::new_from_secs(FIXED_TIMESTEP))
+        .add_state::<AppState>()
+        .add_systems(OnEnter(AppState::InGame), setup)
+        .add_systems(OnEnter(AppState::InGame), player::setup)
+        .add_systems(
+            Update,
+            (
+                mob::update_pos,
+                collisions::check_player_and_mob_collision,
+                inputs::process_keyboard_events,
+                mob::check_dead,
+                mob::spawn,
+                target::update,
+            )
+                .run_if(in_state(AppState::InGame)),
+        )
+        .add_systems(OnEnter(AppState::GameOverMenu), game_over::setup)
+        //        .insert_resource(FixedTime::new_from_secs(FIXED_TIMESTEP))
         .run();
 }
 

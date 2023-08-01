@@ -1,14 +1,33 @@
-use bevy::{prelude::*, transform::commands, window::WindowCreated, text::{BreakLineOn, Text2dBounds}};
+use bevy::{prelude::*, text::BreakLineOn};
 use bevy_turborand::prelude::*;
 
 use crate::player::GamePlayer;
 
-#[derive(Component)]
-pub struct Mob;
+const MOB_SPEED: f32 = 100.0;
 
 #[derive(Component)]
-pub struct Name {
-    label: Vec<char>,
+pub struct Mob {
+    pub name: String,
+    pub damages: u8,
+}
+
+impl Mob {
+    pub fn new(name: String) -> Self {
+        Mob {
+            name,
+            damages: 0,
+        }
+    }
+}
+
+pub struct TimeSinceLastSpawn {
+    value: f32,
+}
+
+impl Default for TimeSinceLastSpawn {
+    fn default() -> Self {
+        Self { value: f32::MAX }
+    }
 }
 
 pub fn spawn(
@@ -16,7 +35,14 @@ pub fn spawn(
     asset_server: Res<AssetServer>,
     mut global_rng: ResMut<GlobalRng>,
     windows: Query<&Window>,
+    time: Res<Time>,
+    mut since_last_spawn: Local<TimeSinceLastSpawn>
 ) {
+    (*since_last_spawn).value += time.delta_seconds();
+    if since_last_spawn.value <= 2.0 {
+        return;
+    }
+    (*since_last_spawn).value = 0.0;
     let window = windows.single();
     let spawns_left = global_rng.bool();
     let spawns_up = global_rng.bool();
@@ -26,28 +52,28 @@ pub fn spawn(
     } else {
         window.width() / 2.0 - 32.0
     };
-    let font = asset_server.load("fonts/Chalkduster.ttf");
+    let font: Handle<Font> = asset_server.load("fonts/Chalkduster.ttf");
     let texture: Handle<Image> = asset_server.load("red_character.png");
+    let mob_name = "killme".to_string();
     commands.spawn((
         SpriteBundle {
             texture,
             transform: Transform::from_translation(Vec3::new(x, 0.0, 0.0)),
             ..Default::default()
         },
-        Mob,
-        Name { label: "alfred".chars().collect() },
+        Mob::new(mob_name.clone()),
     )).with_children(|builder| {
         builder.spawn(Text2dBundle {
             text: Text {
                 sections: vec![TextSection::new(
-                    format!("alfred"),
+                    mob_name,
                     TextStyle {
                         color: Color::RED,
                         font,
                         font_size: 42.0,
                     },
                 )],
-                alignment: TextAlignment::Left,
+                alignment: TextAlignment::Center,
                 linebreak_behavior: BreakLineOn::WordBoundary,
             },
             text_anchor: bevy::sprite::Anchor::TopCenter,
@@ -73,6 +99,18 @@ pub fn update_pos(
         //     mob_transform.translation.project_onto(player_transform.translation).normalize_or_zero()
         // );
         let direction = player_transform.translation - mob_transform.translation;
-        mob_transform.translation += direction / direction.length() * 100.0 * time.delta_seconds();
+        mob_transform.translation += direction / direction.length() * MOB_SPEED * time.delta_seconds();
+    }
+}
+
+pub fn check_dead(
+    mut commands: Commands,
+    mut mobs_query: Query<(&mut Mob, Entity)>,
+) {
+    for (mob, entity) in &mut mobs_query {
+        if mob.damages >= mob.name.len() as u8 {
+            println!("Dead mob!");
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
