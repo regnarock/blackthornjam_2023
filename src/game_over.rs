@@ -1,4 +1,4 @@
-use bevy::{prelude::*, text::BreakLineOn};
+use bevy::prelude::*;
 
 pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("fonts/Chalkduster.ttf");

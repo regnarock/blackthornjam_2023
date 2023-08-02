@@ -52,11 +52,11 @@ fn spawn(
     mut since_last_spawn: Local<TimeSinceLastSpawn>,
     mobs_config: Res<MobsConfig>,
 ) {
-    (*since_last_spawn).value += time.delta_seconds();
+    since_last_spawn.value += time.delta_seconds();
     if since_last_spawn.value <= mobs_config.respawn_time_sec {
         return;
     }
-    (*since_last_spawn).value = 0.0;
+    since_last_spawn.value = 0.0;
     let window = windows.single();
     let spawns_left = global_rng.bool();
     let spawns_up = global_rng.bool();
@@ -120,7 +120,6 @@ fn spawn(
 }
 
 fn update_pos(
-    mut commands: Commands,
     time: Res<Time>,
     mut mobs_query: Query<&mut Transform, (With<Mob>, Without<GamePlayer>)>,
     mut player_query: Query<&Transform, (With<GamePlayer>, Without<Mob>)>,

@@ -24,7 +24,6 @@ pub enum AppState {
     GameOverMenu,
 }
 
-const FIXED_TIMESTEP: f32 = 0.5;
 fn main() {
     App::new()
         .init_resource::<Target>()
@@ -48,6 +47,6 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, _asset_server: Res<AssetServer>) {
     commands.spawn(Camera2dBundle::default());
 }
