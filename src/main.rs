@@ -13,6 +13,7 @@ pub mod target;
 
 use bevy::prelude::*;
 use bevy_turborand::prelude::*;
+use mob::MobsPlugin;
 use target::Target;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
@@ -29,17 +30,15 @@ fn main() {
         .init_resource::<Target>()
         .add_plugins(DefaultPlugins)
         .add_plugins(RngPlugin::default())
+        .add_plugins(MobsPlugin)
         .add_state::<AppState>()
         .add_systems(OnEnter(AppState::InGame), setup)
         .add_systems(OnEnter(AppState::InGame), player::setup)
         .add_systems(
             Update,
             (
-                mob::update_pos,
                 collisions::check_player_and_mob_collision,
                 inputs::process_keyboard_events,
-                mob::check_dead,
-                mob::spawn,
                 target::update,
             )
                 .run_if(in_state(AppState::InGame)),
