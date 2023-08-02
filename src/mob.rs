@@ -22,11 +22,15 @@ struct MobsConfig {
     mobs: Vec<MobConfig>,
     respawn_time_sec: f32,
     respawn_time_min_sec: f32,
+    time_to_mix: f32,
+    available_colors: Vec<Color>,
 }
 
+#[derive(Clone)]
 pub struct MobConfig {
     pub name: String,
     pub asset_name: String,
+    pub text_color: Color,
 }
 
 pub struct TimeSinceLastSpawn {
@@ -73,6 +77,11 @@ fn spawn(
     // TODO: don't reload the asset at each spawn, but load it once for good
     let font: Handle<Font> = asset_server.load("fonts/Chalkduster.ttf");
     let texture: Handle<Image> = asset_server.load(format!("{}.png", config.asset_name));
+    let color: Color = if mobs_config.respawn_time_sec < mobs_config.time_to_mix && global_rng.chance(0.3) {
+        mobs_config.available_colors[global_rng.usize(0..mobs_config.available_colors.len())]
+    } else {
+        config.text_color
+    };
 
     commands
         .spawn((
@@ -89,7 +98,7 @@ fn spawn(
                     sections: vec![TextSection::new(
                         config.name.clone(),
                         TextStyle {
-                            color: Color::RED,
+                            color,
                             font,
                             font_size: 42.0,
                         },
@@ -136,8 +145,7 @@ fn check_dead(
 ) {
     for (mob, entity) in &mut mobs_query {
         if mob.damages >= mob.name.len() as u8 {
-            println!("Dead mob!");
-            config.respawn_time_sec = (config.respawn_time_sec - 0.03).max(config.respawn_time_min_sec);
+            config.respawn_time_sec = (config.respawn_time_sec - 0.1).max(config.respawn_time_min_sec);
             commands.entity(entity).despawn_recursive();
         }
     }
@@ -147,23 +155,29 @@ pub struct MobsPlugin;
 
 impl Plugin for MobsPlugin {
     fn build(&self, app: &mut App) {
+        let mobs = &vec![
+            MobConfig {
+                name: "blue".to_string(),
+                asset_name: "purple_character".to_string(),
+                text_color: Color::BLUE,
+            },
+            MobConfig {
+                name: "red".to_string(),
+                asset_name: "red_character".to_string(),
+                text_color: Color::RED,
+            },
+            MobConfig {
+                name: "green".to_string(),
+                asset_name: "green_character".to_string(),
+                text_color: Color::GREEN,
+            },
+        ];
         app.insert_resource(MobsConfig {
-            respawn_time_sec: 5.0,
-            respawn_time_min_sec: 0.5,
-            mobs: vec![
-                MobConfig {
-                    name: "blue".to_string(),
-                    asset_name: "purple_character".to_string(),
-                },
-                MobConfig {
-                    name: "red".to_string(),
-                    asset_name: "red_character".to_string(),
-                },
-                MobConfig {
-                    name: "green".to_string(),
-                    asset_name: "green_character".to_string(),
-                },
-            ],
+            respawn_time_sec: 4.0,
+            respawn_time_min_sec: 1.0,
+            time_to_mix: 2.0,
+            mobs: mobs.to_owned(),
+            available_colors: mobs.iter().map(|m| m.text_color).collect()
         })
         .add_systems(
             Update,
