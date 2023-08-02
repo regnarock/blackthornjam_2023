@@ -77,11 +77,12 @@ fn spawn(
     // TODO: don't reload the asset at each spawn, but load it once for good
     let font: Handle<Font> = asset_server.load("fonts/Chalkduster.ttf");
     let texture: Handle<Image> = asset_server.load(format!("{}.png", config.asset_name));
-    let color: Color = if mobs_config.respawn_time_sec < mobs_config.time_to_mix && global_rng.chance(0.3) {
-        mobs_config.available_colors[global_rng.usize(0..mobs_config.available_colors.len())]
-    } else {
-        config.text_color
-    };
+    let color: Color =
+        if mobs_config.respawn_time_sec < mobs_config.time_to_mix && global_rng.chance(0.3) {
+            mobs_config.available_colors[global_rng.usize(0..mobs_config.available_colors.len())]
+        } else {
+            config.text_color
+        };
 
     commands
         .spawn((
@@ -145,7 +146,8 @@ fn check_dead(
 ) {
     for (mob, entity) in &mut mobs_query {
         if mob.damages >= mob.name.len() as u8 {
-            config.respawn_time_sec = (config.respawn_time_sec - 0.1).max(config.respawn_time_min_sec);
+            config.respawn_time_sec =
+                (config.respawn_time_sec - 0.1).max(config.respawn_time_min_sec);
             commands.entity(entity).despawn_recursive();
         }
     }
@@ -177,7 +179,7 @@ impl Plugin for MobsPlugin {
             respawn_time_min_sec: 1.0,
             time_to_mix: 2.0,
             mobs: mobs.to_owned(),
-            available_colors: mobs.iter().map(|m| m.text_color).collect()
+            available_colors: mobs.iter().map(|m| m.text_color).collect(),
         })
         .add_systems(
             Update,

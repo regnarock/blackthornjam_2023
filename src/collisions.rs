@@ -1,4 +1,4 @@
-use bevy::{prelude::*, math::Vec3Swizzles};
+use bevy::{math::Vec3Swizzles, prelude::*};
 
 use crate::{mob::Mob, player::GamePlayer, AppState};
 
@@ -10,7 +10,12 @@ pub fn check_player_and_mob_collision(
     let (player_pos, player_e) = player_query.single();
 
     for mob_transform in &mobs_query {
-        if player_pos.translation.xy().distance(mob_transform.translation.xy()) <= 32.0 {
+        if player_pos
+            .translation
+            .xy()
+            .distance(mob_transform.translation.xy())
+            <= 32.0
+        {
             next_state.set(AppState::GameOverMenu);
         }
     }
