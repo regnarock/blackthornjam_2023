@@ -14,8 +14,7 @@ pub fn check_player_and_mob_collision(
             .translation
             .xy()
             .distance(mob_transform.translation.xy());
-        if distance_to_player <= 32.0
-        {
+        if distance_to_player <= 32.0 {
             next_state.set(AppState::GameOverMenu);
         }
     }

@@ -13,7 +13,7 @@ pub fn process_keyboard_events(
     mut texts_query: Query<&mut Text>,
 ) {
     let Some(target_mob) = target.entity else { return };
-    
+
     for event in evr_char.iter() {
         match event.char {
             c if c.is_ascii_lowercase() => {
